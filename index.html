@@ -2,47 +2,73 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Quiz Module - HTML CSS JS</title>
+  <title>LPU Quiz Portal</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="style.css" />
   <script src="main.js" defer></script>
 </head>
 <body>
+  <!-- Top Navigation -->
   <header class="topbar">
-    <h1>Quiz Module</h1>
-    <nav>
+    <div class="topbar-left">
+      <img src="lpu-logo.png" alt="Lovely Professional University" class="lpu-logo" />
+      <div>
+        <h1>Lovely Professional University</h1>
+        <p class="topbar-subtitle">Online Quiz Interface Module</p>
+      </div>
+    </div>
+    <nav class="topbar-right">
       <button class="link-btn" onclick="showSection('home')">Home</button>
+      <button class="link-btn" onclick="showSection('student-login')">Student</button>
+      <button class="link-btn" onclick="showSection('teacher-login')">Teacher</button>
     </nav>
   </header>
 
+  <!-- Background gradient + floating cards -->
+  <div class="hero-bg"></div>
+
   <main class="container">
 
-    <!-- Home: select role -->
+    <!-- Landing / Role Selection -->
     <section id="home" data-section>
-      <div class="card center">
-        <h2>Select Portal</h2>
-        <div class="row">
-          <button class="btn primary" onclick="showSection('student-login')">
-            Student Portal
-          </button>
-          <button class="btn secondary" onclick="showSection('teacher-login')">
-            Teacher Portal
-          </button>
+      <div class="card hero-card animate-fade-up">
+        <h2>Welcome to LPU Quiz Portal</h2>
+        <p class="muted">
+          A lightweight exam interface for students and faculty – designed for practice, labs and assessments.
+        </p>
+        <div class="role-grid">
+          <div class="role-card">
+            <h3>Student Portal</h3>
+            <p>Attempt live quizzes, view results instantly and review your past performance.</p>
+            <button class="btn primary" onclick="showSection('student-login')">
+              Continue as Student
+            </button>
+          </div>
+          <div class="role-card">
+            <h3>Teacher Portal</h3>
+            <p>Create quizzes, publish live exams and monitor student performance with ease.</p>
+            <button class="btn secondary" onclick="showSection('teacher-login')">
+              Continue as Teacher
+            </button>
+          </div>
         </div>
-        <p class="hint">All data is stored in this browser using localStorage.</p>
+        <p class="hint">
+          🔒 All data is stored locally in this browser using <code>localStorage</code>.
+        </p>
       </div>
     </section>
 
     <!-- Student Login -->
     <section id="student-login" data-section class="hidden">
-      <div class="card">
+      <div class="card auth-card animate-fade-up">
         <h2>Student Login</h2>
+        <p class="muted">Enter your registration details to access the quiz dashboard.</p>
         <label>Registration Number</label>
         <input id="student-reg" type="text" placeholder="e.g. S-1001" />
         <label>Name</label>
         <input id="student-name" type="text" placeholder="Your full name" />
         <div class="row space-between">
-          <button class="btn" onclick="showSection('home')">Back</button>
+          <button class="btn ghost" onclick="showSection('home')">Back</button>
           <button class="btn primary" onclick="handleStudentLogin()">Login</button>
         </div>
       </div>
@@ -50,20 +76,23 @@
 
     <!-- Student Dashboard -->
     <section id="student-dashboard" data-section class="hidden">
-      <div class="card">
-        <div class="row space-between">
-          <h2 id="student-dashboard-title">Student Dashboard</h2>
+      <div class="card animate-fade-up">
+        <div class="row space-between align-center">
+          <div>
+            <h2 id="student-dashboard-title">Student Dashboard</h2>
+            <p class="muted">View your live exams and track your performance.</p>
+          </div>
           <button class="btn danger" onclick="studentLogout()">Logout</button>
         </div>
       </div>
 
-      <div class="grid">
-        <div class="card">
+      <div class="dashboard-grid">
+        <div class="card animate-fade-up delay-1">
           <h3>Live Exams</h3>
           <div id="live-exams-list"></div>
         </div>
 
-        <div class="card">
+        <div class="card animate-fade-up delay-2">
           <h3>Past Exams</h3>
           <div id="past-exams-list"></div>
         </div>
@@ -72,51 +101,58 @@
 
     <!-- Student Exam -->
     <section id="student-exam" data-section class="hidden">
-      <div class="card">
-        <div class="row space-between">
+      <div class="card animate-fade-up">
+        <div class="row space-between align-center">
           <div>
             <h2 id="exam-title"></h2>
             <p id="exam-topic" class="muted"></p>
           </div>
           <div class="timer-box">
-            Time Left: <span id="exam-timer">--:--</span>
+            ⏱ Time Left:
+            <span id="exam-timer">--:--</span>
           </div>
         </div>
-        <button class="btn danger" onclick="submitCurrentExam()">Submit Now</button>
+        <div class="row space-between">
+          <button class="btn ghost" onclick="goToStudentDashboard()">Back</button>
+          <button class="btn danger" onclick="submitCurrentExam()">Submit Now</button>
+        </div>
       </div>
 
-      <div id="exam-questions"></div>
+      <div id="exam-questions" class="animate-fade-up delay-1"></div>
     </section>
 
-    <!-- Student Result (after submit) -->
+    <!-- Student Result -->
     <section id="student-result" data-section class="hidden">
-      <div class="card">
+      <div class="card animate-fade-up">
         <h2>Exam Result</h2>
-        <p id="result-summary"></p>
-        <button class="btn" onclick="goToStudentDashboard()">Back to Dashboard</button>
+        <p id="result-summary" class="result-summary"></p>
+        <button class="btn primary" onclick="goToStudentDashboard()">Back to Dashboard</button>
       </div>
-      <div id="result-details"></div>
+      <div id="result-details" class="animate-fade-up delay-1"></div>
     </section>
 
     <!-- Student Past Attempt Detail -->
     <section id="student-past" data-section class="hidden">
-      <div class="card">
-        <h2>Past Attempt</h2>
-        <button class="btn" onclick="goToStudentDashboard()">Back to Dashboard</button>
+      <div class="card animate-fade-up">
+        <div class="row space-between align-center">
+          <h2>Past Attempt</h2>
+          <button class="btn ghost" onclick="goToStudentDashboard()">Back</button>
+        </div>
       </div>
-      <div id="past-attempt-details"></div>
+      <div id="past-attempt-details" class="animate-fade-up delay-1"></div>
     </section>
 
     <!-- Teacher Login -->
     <section id="teacher-login" data-section class="hidden">
-      <div class="card">
+      <div class="card auth-card animate-fade-up">
         <h2>Teacher Login</h2>
+        <p class="muted">Enter your faculty credentials to manage quizzes and results.</p>
         <label>Teacher ID</label>
         <input id="teacher-id" type="text" placeholder="e.g. T-9001" />
         <label>Name</label>
         <input id="teacher-name" type="text" placeholder="Your full name" />
         <div class="row space-between">
-          <button class="btn" onclick="showSection('home')">Back</button>
+          <button class="btn ghost" onclick="showSection('home')">Back</button>
           <button class="btn primary" onclick="handleTeacherLogin()">Login</button>
         </div>
       </div>
@@ -124,9 +160,12 @@
 
     <!-- Teacher Dashboard -->
     <section id="teacher-dashboard" data-section class="hidden">
-      <div class="card">
-        <div class="row space-between">
-          <h2 id="teacher-dashboard-title">Teacher Dashboard</h2>
+      <div class="card animate-fade-up">
+        <div class="row space-between align-center">
+          <div>
+            <h2 id="teacher-dashboard-title">Teacher Dashboard</h2>
+            <p class="muted">Create quizzes, publish exams and monitor student performance.</p>
+          </div>
           <button class="btn danger" onclick="teacherLogout()">Logout</button>
         </div>
         <button class="btn primary" onclick="showSection('teacher-create-quiz')">
@@ -134,7 +173,7 @@
         </button>
       </div>
 
-      <div class="card">
+      <div class="card animate-fade-up delay-1">
         <h3>Your Quizzes</h3>
         <div id="teacher-quizzes-list"></div>
       </div>
@@ -142,55 +181,88 @@
 
     <!-- Teacher Create Quiz -->
     <section id="teacher-create-quiz" data-section class="hidden">
-      <div class="card">
-        <h2>Create Quiz</h2>
-        <label>Quiz Title</label>
-        <input id="quiz-title" type="text" placeholder="e.g. C Programming Basics" />
-        <label>Topic</label>
-        <input id="quiz-topic" type="text" placeholder="e.g. Loops, Arrays" />
+      <div class="card animate-fade-up">
+        <div class="row space-between align-center">
+          <h2>Create Quiz</h2>
+          <button class="btn ghost" onclick="showSection('teacher-dashboard')">Back</button>
+        </div>
+        <div class="two-col">
+          <div>
+            <label>Quiz Title</label>
+            <input id="quiz-title" type="text" placeholder="e.g. C Programming Basics" />
+          </div>
+          <div>
+            <label>Topic</label>
+            <input id="quiz-topic" type="text" placeholder="e.g. Loops, Arrays" />
+          </div>
+        </div>
         <label>Duration (minutes)</label>
         <input id="quiz-duration" type="number" value="17" min="1" />
       </div>
 
-      <div class="card">
+      <div class="card animate-fade-up delay-1">
         <h3>Add Questions</h3>
-        <p class="hint">Recommended: add 10 questions.</p>
+        <p class="hint">Recommended: add 10 questions per quiz.</p>
         <label>Question Text</label>
-        <textarea id="q-text" rows="2"></textarea>
-        <label>Option A</label>
-        <input id="q-a" type="text" />
-        <label>Option B</label>
-        <input id="q-b" type="text" />
-        <label>Option C</label>
-        <input id="q-c" type="text" />
-        <label>Option D</label>
-        <input id="q-d" type="text" />
-        <label>Correct Option</label>
-        <select id="q-correct">
-          <option value="0">A</option>
-          <option value="1">B</option>
-          <option value="2">C</option>
-          <option value="3">D</option>
-        </select>
-        <label>Explanation (shown after exam)</label>
-        <textarea id="q-expl" rows="2"></textarea>
+        <textarea id="q-text" rows="2" placeholder="Type your question here..."></textarea>
+        <div class="two-col">
+          <div>
+            <label>Option A</label>
+            <input id="q-a" type="text" />
+          </div>
+          <div>
+            <label>Option B</label>
+            <input id="q-b" type="text" />
+          </div>
+        </div>
+        <div class="two-col">
+          <div>
+            <label>Option C</label>
+            <input id="q-c" type="text" />
+          </div>
+          <div>
+            <label>Option D</label>
+            <input id="q-d" type="text" />
+          </div>
+        </div>
+        <div class="two-col">
+          <div>
+            <label>Correct Option</label>
+            <select id="q-correct">
+              <option value="0">A</option>
+              <option value="1">B</option>
+              <option value="2">C</option>
+              <option value="3">D</option>
+            </select>
+          </div>
+          <div>
+            <label>Explanation</label>
+            <textarea id="q-expl" rows="2" placeholder="Optional explanation shown after exam"></textarea>
+          </div>
+        </div>
 
         <div class="row space-between">
-          <button class="btn" onclick="showSection('teacher-dashboard')">Cancel</button>
+          <button class="btn ghost" onclick="clearNewQuiz()">Clear Questions</button>
           <button class="btn secondary" onclick="addQuestionToNewQuiz()">Add Question</button>
         </div>
       </div>
 
-      <div class="card">
+      <div class="card animate-fade-up delay-2">
         <h3>Questions in this Quiz</h3>
         <div id="new-quiz-questions-list"></div>
         <div class="row space-between">
-          <button class="btn" onclick="clearNewQuiz()">Clear All</button>
+          <button class="btn ghost" onclick="showSection('teacher-dashboard')">Cancel</button>
           <button class="btn primary" onclick="saveNewQuiz()">Save Quiz</button>
         </div>
       </div>
     </section>
 
   </main>
+
+  <footer class="footer">
+    <p class="muted">
+      © Lovely Professional University – Quiz Interface Module (Demo)
+    </p>
+  </footer>
 </body>
 </html>

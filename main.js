@@ -17,7 +17,7 @@ let currentExamAnswers = [];
 let examTimerInterval = null;
 let examTimeLeftSeconds = 0;
 
-// ====== Utility: Storage helpers ======
+// ====== Storage helpers ======
 function loadJSON(key, fallback) {
   try {
     const v = localStorage.getItem(key);
@@ -32,7 +32,7 @@ function saveJSON(key, value) {
   localStorage.setItem(key, JSON.stringify(value));
 }
 
-// ====== Utility: Sections ======
+// ====== Section navigation ======
 function showSection(id) {
   const sections = document.querySelectorAll("[data-section]");
   sections.forEach((sec) => {
@@ -40,7 +40,6 @@ function showSection(id) {
     else sec.classList.add("hidden");
   });
 
-  // When opening dashboards, refresh data
   if (id === "student-dashboard") {
     renderStudentDashboard();
   }
@@ -49,9 +48,9 @@ function showSection(id) {
   }
 }
 
-window.showSection = showSection; // expose to HTML buttons
+window.showSection = showSection;
 
-// ====== Student login / logout ======
+// ====== Student auth ======
 function handleStudentLogin() {
   const reg = document.getElementById("student-reg").value.trim();
   const name = document.getElementById("student-name").value.trim();
@@ -67,14 +66,12 @@ function handleStudentLogin() {
   if (!existing) {
     existing = { regNo: reg, name };
     students.push(existing);
-    saveJSON(KEY_STUDENTS, students);
   } else {
-    // Optionally update name
     existing.name = name;
-    saveJSON(KEY_STUDENTS, students);
   }
-
+  saveJSON(KEY_STUDENTS, students);
   saveJSON(KEY_CURRENT_STUDENT, existing);
+
   showSection("student-dashboard");
 }
 
@@ -91,7 +88,7 @@ function studentLogout() {
 
 window.studentLogout = studentLogout;
 
-// ====== Teacher login / logout ======
+// ====== Teacher auth ======
 function handleTeacherLogin() {
   const id = document.getElementById("teacher-id").value.trim();
   const name = document.getElementById("teacher-name").value.trim();
@@ -107,13 +104,12 @@ function handleTeacherLogin() {
   if (!existing) {
     existing = { teacherId: id, name };
     teachers.push(existing);
-    saveJSON(KEY_TEACHERS, teachers);
   } else {
     existing.name = name;
-    saveJSON(KEY_TEACHERS, teachers);
   }
-
+  saveJSON(KEY_TEACHERS, teachers);
   saveJSON(KEY_CURRENT_TEACHER, existing);
+
   showSection("teacher-dashboard");
 }
 
@@ -150,10 +146,7 @@ function addQuestionToNewQuiz() {
   const b = document.getElementById("q-b").value.trim();
   const c = document.getElementById("q-c").value.trim();
   const d = document.getElementById("q-d").value.trim();
-  const correct = parseInt(
-    document.getElementById("q-correct").value || "0",
-    10
-  );
+  const correct = parseInt(document.getElementById("q-correct").value || "0", 10);
   const expl = document.getElementById("q-expl").value.trim();
 
   if (!text || !a || !b || !c || !d) {
@@ -169,7 +162,6 @@ function addQuestionToNewQuiz() {
     explanation: expl,
   });
 
-  // Clear form
   document.getElementById("q-text").value = "";
   document.getElementById("q-a").value = "";
   document.getElementById("q-b").value = "";
@@ -195,17 +187,16 @@ function renderNewQuizQuestions() {
   container.innerHTML = "";
   newQuizQuestions.forEach((q, idx) => {
     const div = document.createElement("div");
-    div.className = "card";
+    div.className = "card exam-question";
     div.innerHTML = `
-      <strong>Q${idx + 1}.</strong> ${q.text}<br>
-      <span class="muted">
-        A: ${q.options[0]} | B: ${q.options[1]} | C: ${q.options[2]} | D: ${
-      q.options[3]
-    }
-      </span><br>
-      <span class="muted">Correct: ${
-        ["A", "B", "C", "D"][q.correctIndex]
-      }</span>
+      <h4>Q${idx + 1}. ${q.text}</h4>
+      <p class="muted">
+        A: ${q.options[0]} &nbsp;|&nbsp;
+        B: ${q.options[1]} &nbsp;|&nbsp;
+        C: ${q.options[2]} &nbsp;|&nbsp;
+        D: ${q.options[3]}
+      </p>
+      <p class="muted">Correct: ${["A", "B", "C", "D"][q.correctIndex]}</p>
     `;
     container.appendChild(div);
   });
@@ -251,14 +242,13 @@ function saveNewQuiz() {
     isLive: false,
     createdBy: teacher.teacherId,
     createdAt: new Date().toISOString(),
-    questions: newQuizQuestions.slice(), // copy
+    questions: newQuizQuestions.slice(),
   };
 
   const quizzes = loadJSON(KEY_QUIZZES, []);
   quizzes.push(quiz);
   saveJSON(KEY_QUIZZES, quizzes);
 
-  // Reset new quiz form
   newQuizQuestions = [];
   renderNewQuizQuestions();
   document.getElementById("quiz-title").value = "";
@@ -283,13 +273,13 @@ function renderTeacherDashboard() {
   }
 
   if (titleEl) {
-    titleEl.textContent = `Teacher Dashboard - ${teacher.name}`;
+    titleEl.textContent = `Teacher Dashboard – ${teacher.name}`;
   }
-
-  if (!listEl) return;
 
   const quizzes = loadJSON(KEY_QUIZZES, []);
   const mine = quizzes.filter((q) => q.createdBy === teacher.teacherId);
+
+  if (!listEl) return;
 
   if (mine.length === 0) {
     listEl.innerHTML = "<p class='muted'>No quizzes created yet.</p>";
@@ -304,21 +294,19 @@ function renderTeacherDashboard() {
     const badgeText = q.isLive ? "Live" : "Draft";
 
     div.innerHTML = `
-      <div class="row space-between">
+      <div class="row space-between align-center">
         <div>
-          <strong>${q.title}</strong><br>
-          <span class="muted">${q.topic || "No topic"}</span><br>
+          <strong>${q.title}</strong>
+          <span class="badge ${badgeClass}">${badgeText}</span><br>
+          <span class="muted">${q.topic || "No topic specified"}</span><br>
           <span class="muted">Duration: ${q.durationMinutes} minutes</span>
-        </div>
-        <div>
-          <span class="badge ${badgeClass}">${badgeText}</span>
         </div>
       </div>
       <div class="row">
         <button class="btn secondary" onclick="toggleQuizLive(${q.id})">
           ${q.isLive ? "Close Quiz" : "Make Live"}
         </button>
-        <button class="btn" onclick="viewQuizPerformance(${q.id})">
+        <button class="btn ghost" onclick="viewQuizPerformance(${q.id})">
           View Performance
         </button>
       </div>
@@ -334,7 +322,6 @@ function toggleQuizLive(quizId) {
 
   quiz.isLive = !quiz.isLive;
   saveJSON(KEY_QUIZZES, quizzes);
-
   renderTeacherDashboard();
 }
 
@@ -358,7 +345,6 @@ function viewQuizPerformance(quizId) {
     return;
   }
 
-  // Build a simple summary string
   let msg = `Performance for quiz: ${quiz.title}\n\n`;
   relevant.forEach((a) => {
     const student = students.find((s) => s.regNo === a.studentReg);
@@ -386,7 +372,7 @@ function renderStudentDashboard() {
   }
 
   if (titleEl) {
-    titleEl.textContent = `Student Dashboard - ${student.name}`;
+    titleEl.textContent = `Student Dashboard – ${student.name}`;
   }
 
   const quizzes = loadJSON(KEY_QUIZZES, []);
@@ -402,11 +388,11 @@ function renderStudentDashboard() {
       liveEl.innerHTML = "";
       live.forEach((q) => {
         const div = document.createElement("div");
-        div.className = "card";
+        div.className = "card exam-question";
         div.innerHTML = `
-          <strong>${q.title}</strong><span class="badge live">Live</span><br>
-          <span class="muted">${q.topic || "No topic"}</span><br>
-          <span class="muted">Duration: ${q.durationMinutes} minutes</span>
+          <h4>${q.title}<span class="badge live">Live</span></h4>
+          <p class="muted">${q.topic || "No topic specified"}</p>
+          <p class="muted">Duration: ${q.durationMinutes} minutes</p>
           <div class="row">
             <button class="btn primary" onclick="startExam(${q.id})">Start Exam</button>
           </div>
@@ -429,13 +415,13 @@ function renderStudentDashboard() {
         .forEach((a) => {
           const quiz = quizzes.find((q) => q.id === a.quizId);
           const div = document.createElement("div");
-          div.className = "card";
+          div.className = "card exam-question";
           div.innerHTML = `
-            <strong>${quiz ? quiz.title : "Unknown quiz"}</strong><br>
-            <span class="muted">Score: ${a.score}/${a.total}</span><br>
-            <span class="muted">${new Date(a.submittedAt).toLocaleString()}</span>
+            <h4>${quiz ? quiz.title : "Unknown quiz"}</h4>
+            <p class="muted">Score: ${a.score}/${a.total}</p>
+            <p class="muted">${new Date(a.submittedAt).toLocaleString()}</p>
             <div class="row">
-              <button class="btn" onclick="viewPastAttempt(${a.id})">View</button>
+              <button class="btn ghost" onclick="viewPastAttempt(${a.id})">View</button>
             </div>
           `;
           pastEl.appendChild(div);
@@ -469,12 +455,9 @@ function startExam(quizId) {
   currentExamQuiz = quiz;
   currentExamAnswers = new Array(quiz.questions.length).fill(null);
 
-  // Fill exam header
   document.getElementById("exam-title").textContent = quiz.title;
-  document.getElementById("exam-topic").textContent =
-    quiz.topic || "No topic";
+  document.getElementById("exam-topic").textContent = quiz.topic || "No topic";
 
-  // Render questions
   const container = document.getElementById("exam-questions");
   container.innerHTML = "";
   quiz.questions.forEach((q, idx) => {
@@ -487,7 +470,7 @@ function startExam(quizId) {
           (opt, optIndex) => `
         <div class="option-row">
           <label>
-            <input type="radio" name="q_${idx}" value="${optIndex}" 
+            <input type="radio" name="q_${idx}" value="${optIndex}"
               onchange="selectExamAnswer(${idx}, ${optIndex})">
             ${["A", "B", "C", "D"][optIndex]}. ${opt}
           </label>
@@ -499,7 +482,6 @@ function startExam(quizId) {
     container.appendChild(div);
   });
 
-  // Start timer
   if (examTimerInterval) clearInterval(examTimerInterval);
   examTimeLeftSeconds = quiz.durationMinutes * 60;
   updateTimerDisplay();
@@ -563,7 +545,6 @@ function submitCurrentExam() {
     if (currentExamAnswers[idx] === q.correctIndex) score++;
   });
 
-  // Save attempt
   const attempts = loadJSON(KEY_ATTEMPTS, []);
   const attempt = {
     id: nextAttemptId(),
@@ -577,10 +558,8 @@ function submitCurrentExam() {
   attempts.push(attempt);
   saveJSON(KEY_ATTEMPTS, attempts);
 
-  // Show result + solutions
   renderResultScreen(quiz, attempt);
 
-  // Clear current exam
   currentExamQuiz = null;
   currentExamAnswers = [];
 }
@@ -599,10 +578,9 @@ function renderResultScreen(quiz, attempt) {
     detailsEl.innerHTML = "";
     quiz.questions.forEach((q, idx) => {
       const div = document.createElement("div");
-      div.className = "card";
+      div.className = "card exam-question";
       const studentAns = attempt.answers[idx];
       const correctAns = q.correctIndex;
-      const isCorrect = studentAns === correctAns;
 
       const studentAnsLabel =
         studentAns === null
@@ -611,13 +589,16 @@ function renderResultScreen(quiz, attempt) {
       const correctAnsLabel = `${["A", "B", "C", "D"][correctAns]}. ${
         q.options[correctAns]
       }`;
+      const isCorrect = studentAns === correctAns;
 
       div.innerHTML = `
         <strong>Q${idx + 1}.</strong> ${q.text}<br>
-        <span class="${
-          isCorrect ? "result-correct" : "result-wrong"
-        }"><strong>Your answer:</strong> ${studentAnsLabel}</span><br>
-        <span class="result-correct"><strong>Correct answer:</strong> ${correctAnsLabel}</span><br>
+        <span class="${isCorrect ? "result-correct" : "result-wrong"}">
+          <strong>Your answer:</strong> ${studentAnsLabel}
+        </span><br>
+        <span class="result-correct">
+          <strong>Correct answer:</strong> ${correctAnsLabel}
+        </span><br>
         <span class="muted"><strong>Explanation:</strong> ${
           q.explanation || "No explanation provided."
         }</span>
@@ -659,7 +640,7 @@ function viewPastAttempt(attemptId) {
 
   quiz.questions.forEach((q, idx) => {
     const div = document.createElement("div");
-    div.className = "card";
+    div.className = "card exam-question";
     const studentAns = attempt.answers[idx];
     const correctAns = q.correctIndex;
 
@@ -674,10 +655,12 @@ function viewPastAttempt(attemptId) {
 
     div.innerHTML = `
       <strong>Q${idx + 1}.</strong> ${q.text}<br>
-      <span class="${
-        isCorrect ? "result-correct" : "result-wrong"
-      }"><strong>Your answer:</strong> ${studentAnsLabel}</span><br>
-      <span class="result-correct"><strong>Correct answer:</strong> ${correctAnsLabel}</span><br>
+      <span class="${isCorrect ? "result-correct" : "result-wrong"}">
+        <strong>Your answer:</strong> ${studentAnsLabel}
+      </span><br>
+      <span class="result-correct">
+        <strong>Correct answer:</strong> ${correctAnsLabel}
+      </span><br>
       <span class="muted"><strong>Explanation:</strong> ${
         q.explanation || "No explanation provided."
       }</span>
